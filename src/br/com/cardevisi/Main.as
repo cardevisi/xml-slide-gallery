@@ -1,5 +1,8 @@
 package br.com.cardevisi {
 	
+	import flash.display.Bitmap;
+	import flash.display.BitmapData;
+	import flash.display.Loader;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
@@ -8,6 +11,7 @@ package br.com.cardevisi {
 	import flash.net.URLRequest;
 	import com.greensock.*; 
 	import com.greensock.easing.*;
+	import flash.system.LoaderContext;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	import flash.text.TextFieldAutoSize;
@@ -26,6 +30,8 @@ package br.com.cardevisi {
 		private var slideContainer:Sprite;
 		private var containerW:Number;
 		private var totalConta:int;
+		private var bitmapArray:Array;
+		private var bm:Bitmap;
 		
 		public function Main():void {
 			if (stage) init(); 
@@ -47,6 +53,8 @@ package br.com.cardevisi {
 			btnPrev.name = "prev";
 			addChild(btnPrev);
 			
+			bitmapArray = new Array() ;
+			
 			loadData(xmlFile);
 		}
 		
@@ -55,11 +63,9 @@ package br.com.cardevisi {
 			var index:int = 0;
 			if (e.target.name == "next")  {
 				index--;
-				
 			} else if (e.target.name == "prev")  {
 				index++;
 			}
-			
 			scrollingSide(index);
 		}
 		
@@ -105,6 +111,7 @@ package br.com.cardevisi {
 				containerW = container.width;
 				container.x = (containerW + marginLeft) * i ;
 				container.y = 0;
+				loadImages(data.photo[i].filename);
 				txt = createTextField(data.photo[i].description);
 				container.addChild(txt);
 				slideContainer.addChild(container);
@@ -137,6 +144,25 @@ package br.com.cardevisi {
 			sp.graphics.drawRect(0, 0, 200, 200) ;
 			sp.graphics.endFill();
 			return sp;
+		}
+		
+		private function loadImages(path:String):void {
+			var loader:Loader = new Loader();
+			var url:URLRequest = new URLRequest(path);
+			//var loaderContext:LoaderContext = new LoaderContext(false, ApplicationDomain.currentDomain, null);
+			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, loader_complete);
+			loader.load(url);
+		}
+		
+		private function loader_complete(evt:Event):void {
+			var target:Loader = evt.currentTarget.loader as Loader;
+			var bmd:BitmapData = new BitmapData(200, 200);
+			var bmp:Bitmap = new Bitmap(bmd);
+			bmp.scaleX = bm.scaleY = .5;
+			//bmp.y = bitmapHolder.height;
+			//bmd.draw(vid);
+			//bitmapArray.push(bmp);
+//			trace(bitmapArray);
 		}
 		
 	}
