@@ -24,42 +24,27 @@ package br.com.cardevisi {
 		
 		private var pathContent:String = "xml/";
 		private var xmlFile:String = "data.xml";
-		private var btnNext:NextButton;
-		private var btnPrev:PrevButton;
+		private var btnNext:Sprite;
+		private var btnPrev:Sprite;
 		private var marginLeft:int = 1;
 		private var slideContainer:Sprite;
+		private var mainContainer:Sprite;
 		private var containerW:Number;
+		private var maskSlide:Sprite;
 		private var totalConta:int;
 		private var bitmapArray:Array;
 		private var bm:Bitmap;
+		private var _w:Number = 500;
+		private var _h:Number = 500;
 		
 		public function Main():void {
 			if (stage) init(); 
 			else addEventListener(Event.ADDED_TO_STAGE, init);
-			
-			btnNext = new NextButton();
-			btnNext.buttonMode = true;
-			btnNext.addEventListener(MouseEvent.CLICK, handleClick);
-			btnNext.x = stage.stageWidth - btnNext.width;
-			btnNext.y = stage.stageHeight * 0.5;
-			btnNext.name = "next";
-			addChild(btnNext);
-			
-			btnPrev = new PrevButton();
-			btnPrev.buttonMode = true;
-			btnPrev.addEventListener(MouseEvent.CLICK, handleClick);
-			btnPrev.x = 0;
-			btnPrev.y = stage.stageHeight * 0.5;
-			btnPrev.name = "prev";
-			addChild(btnPrev);
-			
 			bitmapArray = new Array() ;
-			
 			loadData(xmlFile);
 		}
 		
 		private function handleClick(e:MouseEvent):void {
-			//totalConta
 			var index:int = 0;
 			if (e.target.name == "next")  {
 				index--;
@@ -87,39 +72,61 @@ package br.com.cardevisi {
 			var path:String = pathContent + file;
 			var xml_loader:URLLoader = new URLLoader();
 				xml_loader.load( new URLRequest(path));
-				trace (path);
-				xml_loader.addEventListener(Event.COMPLETE, create_gallery);
+				xml_loader.addEventListener(Event.COMPLETE, createGallery);
 		}
 		
 		private function createSlide(data:XML):void  {
+			maskSlide = new Sprite();
 			
-			var mask:Sprite = new Sprite();
-			mask.graphics.beginFill(0x2b2b2b, 1);
-			mask.graphics.drawRect(0, 0, 200, 200) ;
-			mask.graphics.endFill();
-			
+			mainContainer = new Sprite();
+			mainContainer.x = 0;
+			mainContainer.y = 0;
+			addChild(mainContainer);
 			
 			slideContainer = new Sprite();
-			addChild(slideContainer);
+			
+			btnNext = createSprite(0, 0, 10, _h, 0xCCCCCC);
+			btnNext.buttonMode = true;
+			btnNext.addEventListener(MouseEvent.CLICK, handleClick);
+			btnNext.x = (_w-btnNext.width);
+			btnNext.y = (_h-btnNext.height);
+			btnNext.name = "next";
+			
+			btnPrev = createSprite(0, 0, 10, _h, 0xCCCCCC);
+			btnPrev.buttonMode = true;
+			btnPrev.addEventListener(MouseEvent.CLICK, handleClick);
+			btnPrev.x = 0;
+			btnPrev.y = 0;
+			btnPrev.name = "prev";
 			
 			var container:Sprite;
 			var total:int = data.photo.length();
 			var txt:TextField;
-			
 			for (var i:int = 0; i < total; i ++ ) {
-				container = createContainer();
+				container = createSprite(0, 0, _w, _h, 0x2b2b2b);
 				containerW = container.width;
 				container.x = (containerW + marginLeft) * i ;
 				container.y = 0;
+				trace (data.photo[i].filename);
 				loadImages(data.photo[i].filename);
 				txt = createTextField(data.photo[i].description);
 				container.addChild(txt);
 				slideContainer.addChild(container);
 			}
-			slideContainer.mask =  mask;
+			
+			maskSlide.graphics.beginFill(0x2b2b2b, 1);
+			maskSlide.graphics.drawRect(0, 0, _w, _h) ;
+			maskSlide.graphics.endFill();
+			
+			mainContainer.addChild(slideContainer);
+			mainContainer.addChild(maskSlide);
+			mainContainer.addChild(btnNext);
+			mainContainer.addChild(btnPrev);
+			
+			slideContainer.mask =  maskSlide;
 		}
 		
-		private function create_gallery(e:Event):void {
+		private function createGallery(e:Event):void {
 			var xml:XML = new XML(e.target.data);
 			createSlide(xml);
 		}
@@ -132,16 +139,16 @@ package br.com.cardevisi {
 			txt.defaultTextFormat = txtFormat;
 			txt.textColor = 0xFFFFFF;	
 			txt.htmlText = value;
-			txt.height = 200;
+			txt.height = _h;
 			txt.autoSize = TextFieldAutoSize.LEFT;
 			txt.wordWrap = true;
 			return txt;
 		}	
 		
-		private function createContainer():Sprite {
+		private function createSprite(x:Number, y:Number, w:Number, h:Number, color:*):Sprite {
 			var sp:Sprite = new Sprite();
-			sp.graphics.beginFill(0x2b2b2b, 1);
-			sp.graphics.drawRect(0, 0, 200, 200) ;
+			sp.graphics.beginFill(color, 1);
+			sp.graphics.drawRect(x, y, w, h);
 			sp.graphics.endFill();
 			return sp;
 		}
@@ -150,19 +157,20 @@ package br.com.cardevisi {
 			var loader:Loader = new Loader();
 			var url:URLRequest = new URLRequest(path);
 			//var loaderContext:LoaderContext = new LoaderContext(false, ApplicationDomain.currentDomain, null);
-			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, loader_complete);
+			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, loaderComplete);
 			loader.load(url);
 		}
 		
-		private function loader_complete(evt:Event):void {
+		private function loaderComplete(evt:Event):void {
 			var target:Loader = evt.currentTarget.loader as Loader;
-			var bmd:BitmapData = new BitmapData(200, 200);
+			var bmd:BitmapData = new BitmapData(_w, _h);
 			var bmp:Bitmap = new Bitmap(bmd);
-			bmp.scaleX = bm.scaleY = .5;
+			trace("BITMAP", bmp);
+			//bmp.scaleX = bm.scaleY = .5;
 			//bmp.y = bitmapHolder.height;
 			//bmd.draw(vid);
-			//bitmapArray.push(bmp);
-//			trace(bitmapArray);
+			bitmapArray.push(bmp);
+			trace(bitmapArray);
 		}
 		
 	}
